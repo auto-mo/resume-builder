@@ -1,0 +1,75 @@
+# Cover-letter knowledge base — EXAMPLE / TEMPLATE
+#
+# Copy this to cover_letter_kb.yaml and replace the text with your own stories.
+# cover_letter_kb.yaml is gitignored (it holds your personal career content).
+#
+# Structure: a list of "sections", each with reusable "variants" the cover-letter
+# generator can pick from. [Role] and [Firm] are filled in at generation time.
+# Keep each variant a single tight paragraph. No em dashes.
+
+sections:
+- section: 1
+  name: OPENING PARAGRAPH
+  description: First paragraph. Sets context, signals fit, earns attention. Match the variant to the firm's focus.
+  variants:
+  - id: A
+    label: Generalist Focus
+    text: I am applying for the [Role] position at [Firm]. My background combines analytical
+      rigor with hands-on execution, built across roles where I had to diagnose a problem,
+      build the supporting analysis, and ship a recommendation that stuck. I bring a perspective
+      that is both strategic and operational.
+    note: Use for broad strategy and operations roles.
+  - id: B
+    label: Domain-Specialist Focus
+    text: I am applying for the [Role] position at [Firm]. With a foundation in [your domain]
+      and direct experience [your signature experience], I offer a combination of domain
+      fluency and business judgment that maps directly to the work your team does.
+    note: Use when the role rewards specific domain depth.
+- section: 2
+  name: STORY 1 — STRATEGIC THINKING
+  description: 'Proves you can diagnose a problem, challenge an assumption, and change direction. Anchor: [your example].'
+  variants:
+  - id: A
+    label: Changed-Direction Framing
+    text: At [Company], I was asked to [the task]. Through [your method, e.g. structured
+      research / analysis], I found that [the insight that contradicted the plan]. I made
+      the case to leadership, built the supporting analysis, and the revised approach was
+      adopted into [the outcome].
+    note: Firms that value challenging assumptions.
+- section: 3
+  name: STORY 2 — DEPTH / DIFFERENTIATION
+  description: 'Proves your specific skill produced an outcome a generalist could not. Anchor: [your example].'
+  variants:
+  - id: A
+    label: Technical Depth Framing
+    text: What differentiated my contribution at [Company] was [your specific skill]. I built
+      [the deliverable] by [the method requiring your depth], which [the measurable result].
+      That work now [its lasting impact].
+    note: Roles where specialist depth is the differentiator.
+- section: 4
+  name: STORY 3 — STAKEHOLDER INFLUENCE & DELIVERY
+  description: 'Proves you can drive change across a complex organization. Anchor: [your example].'
+  variants:
+  - id: A
+    label: Scale and Adoption Framing
+    text: At [Company], I led [the initiative] that required aligning stakeholders across
+      [the functions] around a shared goal. I [what you built/drove]. The challenge was less
+      technical than organizational, translating an ambiguous goal into structures people
+      across functions could act on.
+    note: Transformation-heavy or enterprise roles.
+- section: 5
+  name: CLOSING PARAGRAPH
+  description: Close with your why-this-path rationale and a direct call to action. Keep it tight.
+  variants:
+  - id: A
+    label: General Close
+    text: This role is the right next step because my value comes from applying [your edge]
+      to new problems quickly. Each role I have taken has required me to enter a new context,
+      find what matters, and deliver a recommendation that holds up. That is the work I want
+      to keep doing, at greater scale, with [Firm].
+    note: Works as a general close for most applications.
+  - id: B
+    label: Firm-Specific Close
+    text: I am drawn to [Firm] specifically because [one researched, specific reason]. I would
+      welcome the opportunity to discuss how my background maps to the work your team does.
+    note: Targeted applications. Fill in the bracket before sending.

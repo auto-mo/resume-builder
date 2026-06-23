@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/resume/">
+  <title>Resume Builder</title>
+  <style>
+    /* ── Tokens ──────────────────────────────────────────────────────────────── */
+    :root {
+      --bg:           #f5f5f3;
+      --surface:      #ffffff;
+      --surface-2:    #f0efec;
+      --surface-3:    #e8e6e2;
+      --border:       #e0ddd8;
+      --border-focus: #3d6aff;
+      --text:         #1a1a1a;
+      --text-2:       #4a4a4a;
+      --text-muted:   #777777;
+      --accent:       #3d6aff;
+      --accent-hover: #2a54e8;
+      --success:      #1a8a4a;
+      --success-bg:   #e6f4ed;
+      --warn:         #b45309;
+      --warn-bg:      #fef3c7;
+      --danger:       #c0392b;
+      --danger-bg:    #fdecea;
+      --pill-bg:      #ededf0;
+      --pill-text:    #3d3d3d;
+      --shadow-sm:    0 1px 2px rgba(0,0,0,0.06);
+      --shadow:       0 1px 4px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05);
+      --shadow-lg:    0 8px 32px rgba(0,0,0,0.12);
+      --radius:       8px;
+      --radius-lg:    12px;
+    }
+    [data-theme="dark"] {
+      --bg:           #111111;
+      --surface:      #1c1c1c;
+      --surface-2:    #242424;
+      --surface-3:    #2e2e2e;
+      --border:       #333333;
+      --text:         #e8e8e8;
+      --text-2:       #bbbbbb;
+      --text-muted:   #777777;
+      --accent:       #5a7fff;
+      --accent-hover: #7090ff;
+      --success:      #34c472;
+      --success-bg:   #0d2e1c;
+      --warn:         #f59e0b;
+      --warn-bg:      #2a1f00;
+      --danger:       #e05a4e;
+      --danger-bg:    #2e0f0d;
+      --pill-bg:      #2e2e2e;
+      --pill-text:    #cccccc;
+      --shadow-sm:    0 1px 2px rgba(0,0,0,0.3);
+      --shadow:       0 1px 4px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2);
+      --shadow-lg:    0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    /* ── Reset ───────────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { cursor: pointer; font-family: inherit; }
+
+    /* ── Header ──────────────────────────────────────────────────────────────── */
+    .header {
+      position: sticky; top: 0; z-index: 200;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 52px;
+      display: flex; align-items: center;
+      padding: 0 20px; gap: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .header-logo {
+      font-size: 14px; font-weight: 700; letter-spacing: -0.3px;
+      color: var(--text); flex: 1;
+    }
+    .header-logo span { color: var(--accent); }
+
+    /* Icon button (gear + theme toggle) */
+    .icon-btn {
+      width: 34px; height: 34px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-2);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .icon-btn:hover { background: var(--surface-3); color: var(--text); }
+    .icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Theme toggle pill */
+    .theme-pill {
+      display: flex; align-items: center; gap: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: 7px;
+      padding: 0 10px 0 6px;
+      height: 34px;
+      transition: background 0.15s;
+    }
+    .theme-pill:hover { background: var(--surface-3); }
+    .theme-pill-icon { width: 16px; height: 16px; flex-shrink: 0; }
+    .theme-pill-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; color: var(--text-2); }
+    .theme-pill-label { font-size: 12px; font-weight: 500; color: var(--text-2); }
+
+    /* ── Settings overlay + panel ────────────────────────────────────────────── */
+    .settings-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .settings-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .settings-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; z-index: 301;
+      width: 420px; max-width: 100vw;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-lg);
+    }
+    .settings-panel.open { transform: translateX(0); }
+
+    .settings-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .settings-title { font-size: 14px; font-weight: 600; }
+    .settings-body {
+      flex: 1; overflow-y: auto;
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 24px;
+    }
+
+    /* ── Settings sections ───────────────────────────────────────────────────── */
+    .settings-section {}
+    .settings-section-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* ── Form primitives ─────────────────────────────────────────────────────── */
+    .field { margin-bottom: 12px; }
+    .field:last-child { margin-bottom: 0; }
+    label.field-label {
+      display: block;
+      font-size: 12px; font-weight: 500; color: var(--text-2);
+      margin-bottom: 5px;
+    }
+    .field-hint {
+      font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;
+    }
+    .field-hint a { color: var(--accent); }
+
+    input[type="text"], input[type="password"], textarea, select {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      padding: 8px 11px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(61,106,255,0.1);
+    }
+    textarea { resize: vertical; }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+    select:disabled { opacity: 0.5; }
+
+    /* Provider badge */
+    .key-row { display: flex; gap: 8px; align-items: flex-start; }
+    .key-row input { flex: 1; }
+    .provider-badge {
+      flex-shrink: 0; align-self: center;
+      font-size: 11px; font-weight: 600; padding: 3px 8px;
+      border-radius: 4px; white-space: nowrap;
+    }
+    .provider-badge.anthropic { background: var(--success-bg); color: var(--success); }
+    .provider-badge.openai { background: #e8f0fe; color: #1a56db; }
+    [data-theme="dark"] .provider-badge.openai { background: #0f1e40; color: #7aabff; }
+    .provider-badge.none { background: var(--surface-3); color: var(--text-muted); }
+
+    /* Sliders */
+    .slider-label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 6px;
+    }
+    .slider-label span { font-weight: 700; color: var(--accent); }
+    input[type="range"] {
+      width: 100%; -webkit-appearance: none; appearance: none;
+      height: 4px; border-radius: 2px;
+      background: var(--border); outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px;
+      border-radius: 50%; background: var(--accent); cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .slider-desc { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+
+    /* ── Resume manager ──────────────────────────────────────────────────────── */
+    .resume-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .resume-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .resume-item-body { flex: 1; min-width: 0; }
+    .resume-item-nickname { font-size: 13px; font-weight: 600; }
+    .resume-item-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .resume-item-meta { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+    .resume-item .summary-indicator {
+      font-size: 10px; display: inline-flex; align-items: center; gap: 3px;
+      padding: 1px 6px; border-radius: 3px; margin-top: 4px;
+    }
+    .summary-indicator.ok { background: var(--success-bg); color: var(--success); }
+    .summary-indicator.pending { background: var(--warn-bg); color: var(--warn); }
+
+    .btn-icon {
+      flex-shrink: 0; padding: 5px; border-radius: 5px;
+      border: none; background: transparent; color: var(--text-muted);
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-icon:hover { background: var(--danger-bg); color: var(--danger); }
+    .btn-icon svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+
+    .empty-state {
+      padding: 16px; text-align: center;
+      font-size: 12px; color: var(--text-muted);
+      background: var(--surface-2); border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
+
+    /* Upload form (collapsible) */
+    .upload-toggle {
+      width: 100%; text-align: left;
+      background: transparent; border: 1px dashed var(--border);
+      border-radius: var(--radius); padding: 9px 12px;
+      font-size: 12px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 7px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .upload-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    .upload-toggle svg { width: 14px; height: 14px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .upload-form {
+      margin-top: 8px; padding: 12px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: none; flex-direction: column; gap: 10px;
+    }
+    .upload-form.open { display: flex; }
+
+    .file-pick-row { display: flex; gap: 8px; align-items: center; }
+    .file-name-display {
+      flex: 1; font-size: 12px; color: var(--text-muted);
+      padding: 7px 10px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    input[type="file"] { display: none; }
+
+    /* ── Buttons ─────────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 600; border: none;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .btn svg { width: 14px; height: 14px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-outline {
+      background: transparent; border: 1px solid var(--border); color: var(--text-2);
+    }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-outline:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    /* Spinner */
+    .spinner {
+      width: 14px; height: 14px; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+    .spinner.dark { border-color: rgba(61,106,255,0.2); border-top-color: var(--accent); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Alert ───────────────────────────────────────────────────────────────── */
+    .alert {
+      display: flex; gap: 9px; align-items: flex-start;
+      padding: 10px 13px; border-radius: var(--radius);
+      font-size: 12.5px; line-height: 1.5;
+    }
+    .alert-error  { background: var(--danger-bg);  border: 1px solid var(--danger);  color: var(--danger); }
+    .alert-warn   { background: var(--warn-bg);    border: 1px solid var(--warn);    color: var(--warn); }
+    .alert-success{ background: var(--success-bg); border: 1px solid var(--success); color: var(--success); }
+    .alert-icon { font-size: 14px; flex-shrink: 0; line-height: 1.5; }
+
+    /* ── Main page ───────────────────────────────────────────────────────────── */
+    .main { max-width: 760px; margin: 0 auto; padding: 28px 16px 80px; }
+
+    /* Step bar */
+    .steps {
+      display: flex; margin-bottom: 24px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .step {
+      flex: 1; padding: 11px 16px;
+      display: flex; align-items: center; gap: 9px;
+      font-size: 13px; color: var(--text-muted);
+      border-right: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .step:last-child { border-right: none; }
+    .step.active { color: var(--text); background: var(--surface-2); }
+    .step.done   { color: var(--success); }
+    .step-num {
+      width: 21px; height: 21px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      background: var(--border); color: var(--text-muted);
+    }
+    .step.active .step-num { background: var(--accent); color: #fff; }
+    .step.done   .step-num { background: var(--success); color: #fff; }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+    .card-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 16px;
+    }
+
+    /* JD textarea */
+    #jd-input { min-height: 150px; font-size: 13px; }
+
+    /* Key gate */
+    .key-gate {
+      margin-top: 14px; padding: 14px 16px;
+      background: var(--warn-bg); border: 1px solid var(--warn);
+      border-radius: var(--radius);
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .key-gate-icon { flex-shrink: 0; margin-top: 1px; color: var(--warn); }
+    .key-gate-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .key-gate-text { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+    .key-gate-text strong { color: var(--text); }
+    .key-gate-text a { color: var(--accent); font-weight: 500; }
+    .key-gate-text button.link-btn {
+      background: none; border: none; padding: 0;
+      color: var(--accent); font-size: inherit; font-weight: 600; cursor: pointer;
+      text-decoration: underline;
+    }
+    .key-gate-text button.link-btn:hover { opacity: 0.8; }
+
+    /* Divider */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+    /* Keywords / pills */
+    .pill {
+      display: inline-block;
+      font-size: 11px; padding: 3px 9px; border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--pill-bg); color: var(--pill-text);
+    }
+    .pill.match   { background: var(--success-bg); color: var(--success); border-color: transparent; }
+    .pill.missing { background: var(--danger-bg);  color: var(--danger);  border-color: transparent; }
+    .kw-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+    .kw-label { font-size: 11px; font-weight: 500; color: var(--text-muted); margin-bottom: 5px; }
+
+    /* Score ring */
+    .score-row { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+    .score-ring { position: relative; width: 68px; height: 68px; flex-shrink: 0; }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-ring circle { fill: none; stroke-width: 5; stroke-linecap: round; }
+    .ring-bg   { stroke: var(--border); }
+    .ring-fill { stroke: var(--accent); transition: stroke-dashoffset 0.6s ease; }
+    .score-num {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 700; color: var(--text);
+    }
+    .score-fit { font-size: 19px; font-weight: 700; text-transform: capitalize; }
+    .score-fit.high   { color: var(--success); }
+    .score-fit.medium { color: var(--warn); }
+    .score-fit.low    { color: var(--danger); }
+    .score-rationale { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+
+    /* Recommended resume callout */
+    .rec-callout {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--surface-2); margin-bottom: 14px;
+    }
+    .rec-callout-body { flex: 1; }
+    .rec-callout-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 2px; }
+    .rec-callout-nickname { font-size: 14px; font-weight: 700; color: var(--text); }
+    .rec-callout-verdict { font-size: 12px; margin-top: 2px; }
+    .verdict-ok     { color: var(--success); }
+    .verdict-edits  { color: var(--warn); }
+
+    /* Resume override selector */
+    .override-row { display: flex; gap: 8px; align-items: center; }
+    .override-row select { flex: 1; }
+    .reeval-btn { display: none; }
+
+    /* Bullet edit cards */
+    .edit-list { display: flex; flex-direction: column; gap: 10px; }
+    .edit-card {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; transition: border-color 0.15s, opacity 0.15s;
+    }
+    .edit-card.approved { border-color: var(--success); }
+    .edit-card.rejected { opacity: 0.4; }
+    .edit-header {
+      padding: 8px 12px; background: var(--surface-2);
+      display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+    }
+    .edit-role { font-size: 12px; font-weight: 600; }
+    .edit-actions { display: flex; gap: 5px; }
+    .edit-body { padding: 11px 12px; display: flex; flex-direction: column; gap: 7px; }
+    .diff-line {
+      font-size: 12.5px; line-height: 1.5;
+      padding: 8px 10px; border-radius: 5px;
+    }
+    .diff-original  { background: var(--danger-bg);  border-left: 3px solid var(--danger); }
+    .diff-suggested { background: var(--success-bg); border-left: 3px solid var(--success); }
+    .diff-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.65; margin-bottom: 2px; }
+    .edit-rationale { font-size: 11.5px; color: var(--text-muted); font-style: italic; }
+    .count-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--accent); color: #fff;
+      font-size: 11px; font-weight: 700; min-width: 20px; height: 20px;
+      border-radius: 10px; padding: 0 6px;
+    }
+
+    /* Approved summary (step 2) */
+    .approved-chip {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 9px 11px;
+      background: var(--success-bg); border: 1px solid var(--success);
+      border-radius: var(--radius); margin-bottom: 8px;
+    }
+    .approved-chip-label { font-size: 11px; font-weight: 600; color: var(--success); white-space: nowrap; }
+    .approved-chip-text  { font-size: 12px; color: var(--text-2); flex: 1; }
+
+    /* Download */
+    .download-box {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px; background: var(--success-bg);
+      border: 1px solid var(--success); border-radius: var(--radius);
+    }
+    .download-box-icon { flex-shrink: 0; color: var(--success); }
+    .download-box-icon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .download-filename { font-size: 13px; font-weight: 600; color: var(--success); }
+    .download-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .warn-list { margin-top: 6px; }
+    .warn-item { font-size: 11px; color: var(--warn); }
+    .warn-item::before { content: "Note: "; font-weight: 600; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-logo">Resume<span>Builder</span></div>
+
+  <button class="theme-pill" id="theme-toggle" aria-label="Toggle theme">
+    <div class="theme-pill-icon" id="theme-icon">
+      <!-- filled by JS -->
+    </div>
+    <span class="theme-pill-label" id="theme-label">Light</span>
+  </button>
+
+  <button class="icon-btn" id="settings-btn" aria-label="Settings">
+    <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+  </button>
+</header>
+
+<!-- ── Settings overlay ────────────────────────────────────────────────────────── -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
+
+<aside class="settings-panel" id="settings-panel" role="dialog" aria-label="Settings">
+  <div class="settings-header">
+    <span class="settings-title">Settings</span>
+    <button class="icon-btn" onclick="closeSettings()" aria-label="Close settings">
+      <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="settings-body">
+
+    <!-- API Key -->
+    <div class="settings-section">
+      <div class="settings-section-title">API Key</div>
+      <div class="field">
+        <label class="field-label" for="api-key-input">API Key</label>
+        <div class="key-row">
+          <input type="password" id="api-key-input" placeholder="sk-ant-... or sk-..." autocomplete="off">
+          <span class="provider-badge none" id="provider-badge">None</span>
+        </div>
+        <div class="field-hint">
+          Never stored server-side. Sent with each request from this browser.<br>
+          Get one: <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a>
+          &nbsp;·&nbsp;
+          <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI Platform</a>
+        </div>
+      </div>
+
+      <!-- Local LLM (optional) -->
+      <div class="field">
+        <label class="field-label" for="base-url-input">Local model endpoint (optional)</label>
+        <input type="text" id="base-url-input" placeholder="http://localhost:11434/v1" autocomplete="off"
+          oninput="onBaseUrlChange()">
+        <input type="text" id="local-model-input" placeholder="model name, e.g. llama3.1" autocomplete="off"
+          style="margin-top:6px" oninput="saveSettings()">
+        <div class="field-hint">
+          Run fully offline with an OpenAI-compatible server (Ollama, LM Studio, vLLM).
+          When set, this is used instead of the API key above. Larger models give more
+          reliable results; small ones may need a retry.
+        </div>
+      </div>
+    </div>
+
+    <!-- Models -->
+    <div class="settings-section">
+      <div class="settings-section-title">Models</div>
+      <div class="field">
+        <label class="field-label" for="eval-model-select">Evaluation model</label>
+        <select id="eval-model-select" disabled>
+          <option value="">Add an API key first</option>
+        </select>
+        <div class="field-hint">Used for JD fit assessment and resume triage. Sonnet or GPT-4o recommended.</div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="edit-model-select">Bullet-editing model</label>
+        <select id="edit-model-select" disabled>
+          <option value="">Add an API key first</option>
+        </select>
+        <div class="field-hint">Used for bullet edit suggestions and resume summaries. Haiku or GPT-4o Mini to conserve tokens.</div>
+      </div>
+    </div>
+
+    <!-- Defaults -->
+    <div class="settings-section">
+      <div class="settings-section-title">Generation Defaults</div>
+      <div class="field">
+        <div class="slider-label">
+          Bullets per role <span id="settings-bullet-val">3</span>
+        </div>
+        <input type="range" id="settings-bullet-slider" min="2" max="4" step="1" value="3"
+          oninput="document.getElementById('settings-bullet-val').textContent=this.value; saveSettings()">
+        <div class="slider-desc">How many bullets to include per job on the resume</div>
+      </div>
+      <div class="field">
+        <div class="slider-label">
+          Deviation <span id="settings-dev-val">0.3</span>
+        </div>
+        <input type="range" id="settings-dev-slider" min="0" max="1" step="0.1" value="0.3"
+          oninput="document.getElementById('settings-dev-val').textContent=parseFloat(this.value).toFixed(1); saveSettings()">
+        <div class="slider-desc">0 = near-verbatim rewrite &nbsp;·&nbsp; 1 = fuller JD-aligned reframe</div>
+      </div>
+    </div>
+
+    <!-- Resumes -->
+    <div class="settings-section">
+      <div class="settings-section-title">Resumes</div>
+      <div class="field-hint" style="margin-bottom:10px">
+        These are not versions — each resume is a separate document tailored for a different
+        function or domain. Upload one per role type you apply to. The more resumes you upload,
+        the more tokens each evaluation consumes.
+      </div>
+
+      <div id="resume-list-settings" class="resume-list">
+        <!-- populated by JS -->
+      </div>
+
+      <div id="settings-resume-alert" class="alert alert-error hidden" style="margin-bottom:8px"></div>
+
+      <button class="upload-toggle" onclick="toggleUploadForm()" id="upload-toggle">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+        Add a resume
+      </button>
+
+      <div class="upload-form" id="upload-form">
+        <div class="field">
+          <label class="field-label">Resume file (.docx)</label>
+          <div class="file-pick-row">
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('docx-file').click()">
+              Choose file
+            </button>
+            <span class="file-name-display" id="file-name-display">No file chosen</span>
+          </div>
+          <input type="file" id="docx-file" accept=".docx" onchange="onFileChange(this)">
+        </div>
+        <div class="field">
+          <label class="field-label" for="upload-nickname">Nickname</label>
+          <input type="text" id="upload-nickname" placeholder="e.g. AI Strategy, Healthcare, Consulting">
+        </div>
+        <div class="field">
+          <label class="field-label" for="upload-desc">One-liner description</label>
+          <input type="text" id="upload-desc" placeholder="e.g. Roles in AI transformation and enterprise tech">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" id="upload-btn" onclick="uploadResume()">
+            <span id="upload-btn-text">Upload</span>
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="toggleUploadForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /settings-body -->
+</aside>
+
+<!-- ── Main ────────────────────────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Step bar -->
+  <div class="steps">
+    <div class="step active" id="step-1-ind">
+      <div class="step-num">1</div>
+      <span>Evaluate JD</span>
+    </div>
+    <div class="step" id="step-2-ind">
+      <div class="step-num">2</div>
+      <span>Generate PDF</span>
+    </div>
+  </div>
+
+  <!-- ── Step 1 ── -->
+  <div id="step-1">
+
+    <div class="card">
+      <div class="card-title">Job Description</div>
+
+      <div class="field">
+        <label class="field-label" for="jd-input">Paste the full job description</label>
+        <textarea id="jd-input" placeholder="Paste job description here..."></textarea>
+      </div>
+
+      <div id="eval-alert" class="alert alert-error hidden" style="margin-bottom:12px"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="eval-btn" onclick="runEvaluate()" disabled>
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span id="eval-btn-text">Build Resume</span>
+        </button>
+        <button class="btn btn-outline" id="cl-step1-btn" onclick="toggleClStep1()" disabled>
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Generate Cover Letter</span>
+        </button>
+      </div>
+
+      <div class="key-gate hidden" id="key-gate">
+        <div class="key-gate-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="key-gate-text">
+          <strong>API key required.</strong> Open
+          <button class="link-btn" onclick="openSettings()">Settings</button>
+          and paste your key to use this tool. Your key is never stored on the server.
+          Get one from <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic</a>
+          or <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI</a>.
+        </div>
+      </div>
+    </div>
+
+    <!-- Eval results (Phase 6 populates this) -->
+    <div id="eval-results" class="hidden">
+
+      <div class="card">
+        <div class="card-title">Fit Assessment</div>
+
+        <div class="score-row">
+          <div class="score-ring">
+            <svg width="68" height="68" viewBox="0 0 68 68">
+              <circle class="ring-bg"   cx="34" cy="34" r="28"/>
+              <circle class="ring-fill" id="ring-fill" cx="34" cy="34" r="28"
+                stroke-dasharray="175.9" stroke-dashoffset="175.9"/>
+            </svg>
+            <div class="score-num" id="score-num">—</div>
+          </div>
+          <div>
+            <div class="score-fit" id="score-fit">—</div>
+            <div class="score-rationale" id="score-rationale"></div>
+          </div>
+        </div>
+
+        <div class="kw-label">Target keywords</div>
+        <div class="kw-row" id="kw-target"></div>
+        <div class="kw-label" style="margin-top:10px">Missing from resume</div>
+        <div class="kw-row" id="kw-missing"></div>
+      </div>
+
+      <!-- Recommended resume callout + override -->
+      <div class="card">
+        <div class="card-title">Resume Selection</div>
+
+        <div class="rec-callout" id="rec-callout">
+          <div class="rec-callout-body">
+            <div class="rec-callout-label">Recommended</div>
+            <div class="rec-callout-nickname" id="rec-nickname">—</div>
+            <div class="rec-callout-verdict" id="rec-verdict"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Override resume</label>
+          <div class="override-row">
+            <select id="resume-override-select" onchange="onOverrideChange()">
+              <!-- populated by JS -->
+            </select>
+            <button class="btn btn-outline btn-sm reeval-btn" id="reeval-btn" onclick="runReEvaluate()">
+              Re-evaluate
+            </button>
+          </div>
+          <div class="field-hint">Changing the selected resume runs a fresh evaluation for that resume.</div>
+        </div>
+      </div>
+
+      <!-- Bullet edits -->
+      <div class="card" id="edits-card">
+        <div class="card-title">
+          Suggested edits &nbsp;<span class="count-badge" id="edits-count">0</span>
+        </div>
+        <div class="edit-list" id="edit-list"></div>
+        <hr class="divider">
+        <div class="btn-row">
+          <button class="btn btn-outline btn-sm" onclick="rejectAll()">Skip all</button>
+          <span style="flex:1"></span>
+          <button class="btn btn-primary" onclick="goToGenerate()">Continue &rarr;</button>
+        </div>
+      </div>
+
+    </div><!-- /eval-results -->
+
+    <!-- Cover letter from step 1 -->
+    <div id="cl-step1-section" class="hidden" style="margin-top:20px">
+      <div class="card">
+        <div class="card-title">Cover Letter</div>
+        <div class="field-hint" style="margin-bottom:14px">
+          Company and role are pulled from the job description automatically.
+        </div>
+
+        <div id="cl1-alert" class="alert alert-error hidden" style="margin-bottom:12px"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="cl1-gen-btn" onclick="runCoverLetterStep1()">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span id="cl1-gen-btn-text">Generate</span>
+          </button>
+        </div>
+
+        <div id="cl1-output" class="hidden" style="margin-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:12px;font-weight:600;color:var(--text-muted)">COVER LETTER</span>
+            <button class="btn btn-outline btn-sm" onclick="copyCoverLetterStep1()">Copy</button>
+          </div>
+          <div id="cl1-detected" style="margin-bottom:10px;font-size:12px;color:var(--text-muted)"></div>
+          <textarea id="cl1-text" style="min-height:320px;font-family:inherit;font-size:13px;line-height:1.7" readonly></textarea>
+          <div class="field-hint" style="margin-top:6px">
+            Add "Dear [Hiring Manager]," and your signature before sending.
+          </div>
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Want a tailored resume for this role too?</div>
+            <button class="btn btn-outline" onclick="runEvaluate()">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Build Resume
+            </button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /cl-step1-section -->
+
+  </div><!-- /step-1 -->
+
+  <!-- ── Step 2 ── -->
+  <div id="step-2" class="hidden">
+
+    <div class="card">
+      <div class="card-title">
+        Approved edits &nbsp;<span class="count-badge" id="approved-count">0</span>
+      </div>
+      <div id="approved-summary"></div>
+      <p id="no-edits-msg" class="hidden" style="font-size:12px;color:var(--text-muted)">
+        No edits approved — base bullets will be used as-is.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Output</div>
+      <div class="field">
+        <label class="field-label" for="pdf-filename-input">PDF filename</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="text" id="pdf-filename-input" maxlength="80" placeholder="e.g. Acme_2026-06-05" style="flex:1" oninput="onFilenameInput()">
+          <span style="font-size:13px;color:var(--text-muted);white-space:nowrap">.pdf</span>
+        </div>
+        <div class="field-hint" id="filename-hint">Pre-filled after evaluation. Edit to customize.</div>
+      </div>
+    </div>
+
+    <div id="gen-alert" class="alert alert-error hidden" style="margin-bottom:12px"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="backToStep1()">&larr; Back</button>
+      <button class="btn btn-primary" id="download-btn" onclick="downloadPdf()">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><polyline points="9 15 12 18 15 15"/></svg>
+        <span id="download-btn-text">Download PDF</span>
+      </button>
+    </div>
+
+    <p id="dl-confirm" class="hidden" style="margin-top:12px;font-size:13px;color:var(--success)"></p>
+
+    <!-- Cover letter -->
+    <div id="cl-section" class="hidden" style="margin-top:20px">
+      <div class="card">
+        <div class="card-title">Cover Letter</div>
+        <div class="field-hint" style="margin-bottom:14px">
+          Company and role are pulled from the job description automatically.
+        </div>
+
+        <div id="cl-alert" class="alert alert-error hidden" style="margin-bottom:12px"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-outline" id="cl-btn" onclick="runCoverLetter()">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span id="cl-btn-text">Generate Cover Letter</span>
+          </button>
+        </div>
+
+        <div id="cl-output" class="hidden" style="margin-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:12px;font-weight:600;color:var(--text-muted)">COVER LETTER</span>
+            <button class="btn btn-outline btn-sm" onclick="copyCoverLetter()">Copy</button>
+          </div>
+          <div id="cl-detected" style="margin-bottom:10px;font-size:12px;color:var(--text-muted)"></div>
+          <textarea id="cl-text" style="min-height:320px;font-family:inherit;font-size:13px;line-height:1.7" readonly></textarea>
+          <div class="field-hint" style="margin-top:6px">
+            Add "Dear [Hiring Manager]," and your signature before sending.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /step-2 -->
+
+</main>
+
+<footer style="text-align:center;padding:24px 0 16px;font-size:11px;color:var(--text-muted);">
+  Resume Builder
+</footer>
+
+<script>
+// ── Constants ───────────────────────────────────────────────────────────────────
+const PROVIDER_DOC_LINKS = {
+  anthropic: 'https://console.anthropic.com/settings/keys',
+  openai:    'https://platform.openai.com/api-keys',
+};
+
+// ── State ────────────────────────────────────────────────────────────────────────
+let S = {
+  api_key:    '',
+  base_url:   '',
+  local_model:'',
+  provider:   '',
+  eval_model: '',
+  edit_model: '',
+  bullet_count: 3,
+  deviation:    0.3,
+};
+
+// Effective model id for a given role, accounting for local mode.
+function modelFor(role) {
+  if (S.base_url) return S.local_model || 'local-model';
+  return role === 'eval' ? S.eval_model : S.edit_model;
+}
+// True when a usable credential exists: a key, or a local endpoint.
+function hasCredential() {
+  return !!(S.base_url || S.api_key ||
+    document.getElementById('api-key-input').value.trim());
+}
+
+let evalData   = null;
+let editStates = [];
+let allResumes = [];
+
+// ── Theme ─────────────────────────────────────────────────────────────────────────
+const root        = document.documentElement;
+const themeToggle = document.getElementById('theme-toggle');
+const themeIcon   = document.getElementById('theme-icon');
+const themeLabel  = document.getElementById('theme-label');
+
+const SVG_SUN  = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+const SVG_MOON = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
+function applyTheme(t) {
+  root.setAttribute('data-theme', t);
+  themeLabel.textContent = t === 'dark' ? 'Dark' : 'Light';
+  themeIcon.innerHTML    = t === 'dark' ? SVG_MOON : SVG_SUN;
+  localStorage.setItem('theme', t);
+}
+
+themeToggle.addEventListener('click', () => {
+  applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+
+// Init theme
+applyTheme(
+  localStorage.getItem('theme') ||
+  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+);
+
+// ── Settings open/close ───────────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('settings-panel').classList.add('open');
+  document.getElementById('settings-overlay').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settings-panel').classList.remove('open');
+  document.getElementById('settings-overlay').classList.remove('open');
+  saveSettings();
+}
+document.getElementById('settings-btn').addEventListener('click', () => {
+  openSettings();
+  refreshResumeList();
+});
+
+// ── Persist settings ──────────────────────────────────────────────────────────────
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('rb_settings') || '{}');
+    S.api_key      = saved.api_key      || '';
+    S.base_url     = saved.base_url     || '';
+    S.local_model  = saved.local_model  || '';
+    S.eval_model   = saved.eval_model   || '';
+    S.edit_model   = saved.edit_model   || '';
+    S.bullet_count = saved.bullet_count || 3;
+    S.deviation    = saved.deviation    !== undefined ? saved.deviation : 0.3;
+  } catch(e) { /* ignore */ }
+}
+
+function saveSettings() {
+  S.api_key      = document.getElementById('api-key-input').value.trim();
+  S.base_url     = document.getElementById('base-url-input').value.trim();
+  S.local_model  = document.getElementById('local-model-input').value.trim();
+  S.bullet_count = parseInt(document.getElementById('settings-bullet-slider').value);
+  S.deviation    = parseFloat(document.getElementById('settings-dev-slider').value);
+  S.eval_model   = document.getElementById('eval-model-select').value;
+  S.edit_model   = document.getElementById('edit-model-select').value;
+  localStorage.setItem('rb_settings', JSON.stringify(S));
+  updateEvalButtonState();
+}
+
+function populateSettingsUI() {
+  document.getElementById('api-key-input').value = S.api_key;
+  document.getElementById('base-url-input').value = S.base_url;
+  document.getElementById('local-model-input').value = S.local_model;
+  document.getElementById('settings-bullet-slider').value = S.bullet_count;
+  document.getElementById('settings-bullet-val').textContent = S.bullet_count;
+  document.getElementById('settings-dev-slider').value = S.deviation;
+  document.getElementById('settings-dev-val').textContent = parseFloat(S.deviation).toFixed(1);
+  if (S.base_url) onBaseUrlChange();
+  else if (S.api_key) detectAndPopulateProvider(S.api_key);
+}
+
+// Local-endpoint changes: flip the badge to "Local" and disable the cloud model
+// dropdowns (local uses the free-text model name instead).
+function onBaseUrlChange() {
+  saveSettings();
+  const badge = document.getElementById('provider-badge');
+  if (S.base_url) {
+    S.provider = 'local';
+    badge.textContent = 'Local'; badge.className = 'provider-badge none';
+    ['eval-model-select', 'edit-model-select'].forEach(id => {
+      const s = document.getElementById(id);
+      s.innerHTML = '<option value="">Using local model</option>';
+      s.disabled = true;
+    });
+  } else if (S.api_key) {
+    detectAndPopulateProvider(S.api_key);
+  } else {
+    badge.textContent = 'None'; badge.className = 'provider-badge none';
+  }
+  updateEvalButtonState();
+}
+
+// ── Provider detection + model dropdowns ─────────────────────────────────────────
+let _allModels = {};
+
+async function fetchModels() {
+  try {
+    const r = await fetch('api/models');
+    _allModels = await r.json();
+  } catch(e) { _allModels = {}; }
+}
+
+function detectAndPopulateProvider(key) {
+  const provider = key.startsWith('sk-ant-') ? 'anthropic' : (key.length > 8 ? 'openai' : '');
+  S.provider = provider;
+
+  const badge = document.getElementById('provider-badge');
+  if (!provider || !key) {
+    badge.textContent = 'None'; badge.className = 'provider-badge none';
+  } else {
+    badge.textContent = provider === 'anthropic' ? 'Anthropic' : 'OpenAI';
+    badge.className = `provider-badge ${provider}`;
+  }
+
+  populateModelDropdowns(provider);
+  updateEvalButtonState();
+}
+
+function populateModelDropdowns(provider) {
+  const evalSel = document.getElementById('eval-model-select');
+  const editSel = document.getElementById('edit-model-select');
+  const models  = _allModels[provider] || [];
+
+  if (!models.length) {
+    [evalSel, editSel].forEach(s => {
+      s.innerHTML = '<option value="">Add an API key first</option>';
+      s.disabled = true;
+    });
+    return;
+  }
+
+  function rebuild(sel, savedVal, preferIdx) {
+    sel.innerHTML = models.map(m =>
+      `<option value="${esc(m.id)}">${esc(m.label)}</option>`
+    ).join('');
+    sel.disabled = false;
+    const saved = models.find(m => m.id === savedVal);
+    sel.value = saved ? saved.id : models[Math.min(preferIdx, models.length-1)].id;
+  }
+  rebuild(evalSel, S.eval_model, 1);  // default sonnet/gpt-4o
+  rebuild(editSel, S.edit_model, 1);  // default sonnet; haiku would be index 2
+  // For bullet-editing, prefer the fastest model (last in list)
+  if (!S.edit_model) editSel.value = models[models.length - 1].id;
+  saveSettings();
+}
+
+document.getElementById('api-key-input').addEventListener('input', function() {
+  detectAndPopulateProvider(this.value.trim());
+  saveSettings();
+  refreshResumeList();
+});
+
+// ── Eval button gate ──────────────────────────────────────────────────────────────
+function updateEvalButtonState() {
+  const hasKey = hasCredential();
+  const hasJd  = !!document.getElementById('jd-input').value.trim();
+  document.getElementById('eval-btn').disabled        = !(hasKey && hasJd);
+  document.getElementById('cl-step1-btn').disabled    = !(hasKey && hasJd);
+  document.getElementById('key-gate').classList.toggle('hidden', hasKey);
+}
+
+// Build the ?api_key=&base_url= query string for GET/DELETE credential passing.
+function credQuery() {
+  const key = S.api_key || document.getElementById('api-key-input').value.trim();
+  const parts = [];
+  if (key)        parts.push('api_key='  + encodeURIComponent(key));
+  if (S.base_url) parts.push('base_url=' + encodeURIComponent(S.base_url));
+  return parts.length ? '?' + parts.join('&') : '';
+}
+
+document.getElementById('jd-input').addEventListener('input', updateEvalButtonState);
+
+// ── Resume list (settings panel) ─────────────────────────────────────────────────
+async function refreshResumeList() {
+  try {
+    const r = await fetch('api/resumes' + credQuery());
+    const d = await r.json();
+    allResumes = d.resumes || [];
+  } catch(e) { allResumes = []; }
+
+  const container = document.getElementById('resume-list-settings');
+  if (!allResumes.length) {
+    container.innerHTML = '<div class="empty-state">No resumes uploaded yet.</div>';
+    return;
+  }
+  container.innerHTML = allResumes.map(res => `
+    <div class="resume-item" id="ri-${esc(res.id)}">
+      <div class="resume-item-body">
+        <div class="resume-item-nickname">${esc(res.nickname)}</div>
+        ${res.description ? `<div class="resume-item-desc">${esc(res.description)}</div>` : ''}
+        <div class="resume-item-meta">${res.roles} roles &nbsp;·&nbsp; uploaded ${fmtDate(res.uploaded_at)}</div>
+        <span class="summary-indicator ${res.has_summary ? 'ok' : 'pending'}">
+          ${res.has_summary ? 'Summary ready' : 'Summary pending'}
+        </span>
+      </div>
+      <button class="btn-icon" onclick="deleteResume('${esc(res.id)}','${esc(res.nickname)}')" aria-label="Delete ${esc(res.nickname)}">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+async function deleteResume(id, nickname) {
+  if (!confirm(`Delete "${nickname}"? This cannot be undone.`)) return;
+  const url = `api/resumes/${id}` + credQuery();
+  const r = await fetch(url, { method: 'DELETE' });
+  if (r.ok) await refreshResumeList();
+  else showSettingsAlert(`Failed to delete ${nickname}.`);
+}
+
+function showSettingsAlert(msg) {
+  const el = document.getElementById('settings-resume-alert');
+  el.textContent = msg; el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 4000);
+}
+
+// ── Upload form ───────────────────────────────────────────────────────────────────
+function toggleUploadForm() {
+  const form = document.getElementById('upload-form');
+  const toggle = document.getElementById('upload-toggle');
+  const open = form.classList.toggle('open');
+  toggle.innerHTML = open
+    ? `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg> Cancel`
+    : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7-7 7 7"/></svg> Add a resume`;
+}
+
+function onFileChange(input) {
+  document.getElementById('file-name-display').textContent =
+    input.files[0] ? input.files[0].name : 'No file chosen';
+}
+
+async function uploadResume() {
+  const file     = document.getElementById('docx-file').files[0];
+  const nickname = document.getElementById('upload-nickname').value.trim();
+  const desc     = document.getElementById('upload-desc').value.trim();
+  const key      = S.api_key || document.getElementById('api-key-input').value.trim();
+
+  if (!file)     return showSettingsAlert('Choose a .docx file.');
+  if (!nickname) return showSettingsAlert('Nickname is required.');
+
+  setBtnLoading('upload-btn', 'upload-btn-text', true, 'Uploading...');
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('nickname', nickname);
+  fd.append('description', desc);
+  if (key)        fd.append('api_key', key);
+  if (S.base_url) fd.append('base_url', S.base_url);
+  if (key || S.base_url) {
+    fd.append('summary_model', modelFor('edit') || 'claude-haiku-4-5-20251001');
+  }
+
+  try {
+    const r  = await fetch('upload-resume', { method: 'POST', body: fd });
+    const d  = await r.json();
+    if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+
+    // Reset form
+    document.getElementById('docx-file').value = '';
+    document.getElementById('file-name-display').textContent = 'No file chosen';
+    document.getElementById('upload-nickname').value = '';
+    document.getElementById('upload-desc').value = '';
+    toggleUploadForm();
+    await refreshResumeList();
+  } catch(e) {
+    showSettingsAlert(e.message);
+  } finally {
+    setBtnLoading('upload-btn', 'upload-btn-text', false, 'Upload');
+  }
+}
+
+// ── Evaluate ──────────────────────────────────────────────────────────────────────
+async function runEvaluate(overrideResumeId) {
+  const jd      = document.getElementById('jd-input').value.trim();
+  const key     = S.api_key;
+  const alertEl = document.getElementById('eval-alert');
+  alertEl.classList.add('hidden');
+
+  if (!jd) return showAlert(alertEl, 'Paste a job description first.');
+
+  // Hide the cover letter path if user switches to resume path
+  document.getElementById('cl-step1-section').classList.add('hidden');
+
+  setBtnLoading('eval-btn', 'eval-btn-text', true, 'Evaluating...');
+
+  try {
+    const body = {
+      jd_text:    jd,
+      api_key:    key,
+      base_url:   S.base_url,
+      eval_model: modelFor('eval'),
+      edit_model: modelFor('edit'),
+      deviation:  S.deviation,
+    };
+    if (overrideResumeId) body.resume_id = overrideResumeId;
+
+    const r = await fetch('evaluate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+
+    evalData = d;
+    renderEvalResults(d);
+    prefillFilename(d.company_name || null);
+  } catch(e) {
+    showAlert(alertEl, e.message);
+  } finally {
+    setBtnLoading('eval-btn', 'eval-btn-text', false, 'Re-evaluate');
+  }
+}
+
+async function runReEvaluate() {
+  const sel = document.getElementById('resume-override-select');
+  const id  = sel.value;
+  if (!id) return;
+  document.getElementById('reeval-btn').style.display = 'none';
+  await runEvaluate(id);
+}
+
+function onOverrideChange() {
+  const sel       = document.getElementById('resume-override-select');
+  const reevalBtn = document.getElementById('reeval-btn');
+  const recId     = evalData && evalData.recommended_resume_id;
+  if (sel.value && sel.value !== recId) {
+    reevalBtn.style.display = '';
+  } else {
+    reevalBtn.style.display = 'none';
+  }
+}
+
+function renderEvalResults(d) {
+  // Score ring
+  const score = d.fit_score ?? 0;
+  const circ  = 175.9;
+  document.getElementById('ring-fill').style.strokeDashoffset = circ * (1 - score / 100);
+  document.getElementById('score-num').textContent = score || '—';
+
+  const fitEl = document.getElementById('score-fit');
+  fitEl.textContent = d.role_fit ? capitalize(d.role_fit) : '—';
+  fitEl.className   = 'score-fit ' + (d.role_fit || '');
+
+  document.getElementById('score-rationale').textContent = d.rationale || '';
+
+  renderPills('kw-target',  d.target_keywords  || [], 'match');
+  renderPills('kw-missing', d.missing_keywords || [], 'missing');
+
+  // Recommended resume callout
+  document.getElementById('rec-nickname').textContent = d.recommended_nickname || '—';
+  const verdictEl = document.getElementById('rec-verdict');
+  if (d.verdict === 'use_as_is') {
+    verdictEl.textContent  = 'Good to use as-is — no edits needed';
+    verdictEl.className    = 'rec-callout-verdict verdict-ok';
+  } else {
+    verdictEl.textContent  = 'Edits suggested below';
+    verdictEl.className    = 'rec-callout-verdict verdict-edits';
+  }
+
+  // Populate override dropdown
+  const sel = document.getElementById('resume-override-select');
+  sel.innerHTML = allResumes.map(res =>
+    `<option value="${esc(res.id)}" ${res.id === d.recommended_resume_id ? 'selected' : ''}>
+      ${esc(res.nickname)}${res.id === d.recommended_resume_id ? ' (recommended)' : ''}
+    </option>`
+  ).join('');
+  document.getElementById('reeval-btn').style.display = 'none';
+
+  // Bullet edits
+  editStates = (d.bullet_edits || []).map(() => true);
+  renderEditList(d.bullet_edits || []);
+  document.getElementById('edits-count').textContent = d.bullet_edits ? d.bullet_edits.length : 0;
+
+  document.getElementById('eval-results').classList.remove('hidden');
+  document.getElementById('eval-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderPills(containerId, items, cls) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.length
+    ? items.map(k => `<span class="pill ${cls}">${esc(k)}</span>`).join('')
+    : `<span style="font-size:12px;color:var(--text-muted)">None</span>`;
+}
+
+function renderEditList(edits) {
+  const list = document.getElementById('edit-list');
+  if (!edits.length) {
+    list.innerHTML = '<p style="font-size:12px;color:var(--text-muted)">No edits suggested — bullets already align well with the JD.</p>';
+    return;
+  }
+  list.innerHTML = edits.map((e, i) => `
+    <div class="edit-card approved" id="ec-${i}">
+      <div class="edit-header">
+        <span class="edit-role">${esc(e.role)} &middot; Bullet ${(e.bullet_index ?? 0) + 1}</span>
+        <div class="edit-actions">
+          <button class="btn btn-outline btn-sm" id="rj-${i}" onclick="toggleEdit(${i})"
+            style="font-size:11px">Skip</button>
+        </div>
+      </div>
+      <div class="edit-body">
+        <div class="diff-line diff-original">
+          <div class="diff-label">Original</div>${esc(e.original)}
+        </div>
+        <div class="diff-line diff-suggested">
+          <div class="diff-label">Suggested</div>${esc(e.suggested)}
+        </div>
+        <div class="edit-rationale">${esc(e.rationale || '')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleEdit(i) {
+  // Toggle: approved → skipped → approved
+  editStates[i] = !editStates[i];
+  const skipped = !editStates[i];
+  document.getElementById(`ec-${i}`).className = 'edit-card ' + (skipped ? 'rejected' : 'approved');
+  const btn = document.getElementById(`rj-${i}`);
+  btn.textContent = skipped ? 'Undo' : 'Skip';
+  btn.style.color        = skipped ? 'var(--success)' : '';
+  btn.style.borderColor  = skipped ? 'var(--success)' : '';
+}
+function approveAll() { editStates.forEach((_, i) => { editStates[i] = false; toggleEdit(i); }); }
+function rejectAll()  { editStates.forEach((_, i) => { editStates[i] = true;  toggleEdit(i); }); }
+
+// ── Step navigation ───────────────────────────────────────────────────────────────
+function goToGenerate() {
+  const approved = (evalData?.bullet_edits || []).filter((_, i) => editStates[i]);
+  document.getElementById('approved-count').textContent = approved.length;
+
+  const summaryEl = document.getElementById('approved-summary');
+  const noMsg     = document.getElementById('no-edits-msg');
+  if (!approved.length) {
+    summaryEl.innerHTML = '';
+    noMsg.classList.remove('hidden');
+  } else {
+    noMsg.classList.add('hidden');
+    summaryEl.innerHTML = approved.map(e => `
+      <div class="approved-chip">
+        <span class="approved-chip-label">${esc(e.role)} &middot; B${(e.bullet_index ?? 0)+1}</span>
+        <span class="approved-chip-text">${esc(e.suggested)}</span>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('step-1').classList.add('hidden');
+  document.getElementById('step-2').classList.remove('hidden');
+  document.getElementById('dl-confirm').classList.add('hidden');
+  document.getElementById('cl-section').classList.add('hidden');
+  document.getElementById('cl-output').classList.add('hidden');
+  document.getElementById('gen-alert').classList.add('hidden');
+
+  document.getElementById('step-1-ind').classList.replace('active', 'done');
+  document.getElementById('step-2-ind').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToStep1() {
+  document.getElementById('step-2').classList.add('hidden');
+  document.getElementById('step-1').classList.remove('hidden');
+  document.getElementById('step-1-ind').classList.remove('done');
+  document.getElementById('step-1-ind').classList.add('active');
+  document.getElementById('step-2-ind').classList.remove('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Download (generate + download in one) ──────────────────────────────────────────
+async function downloadPdf() {
+  const alertEl = document.getElementById('gen-alert');
+  alertEl.classList.add('hidden');
+
+  const approved = (evalData?.bullet_edits || []).filter((_, i) => editStates[i]);
+  const resumeId = evalData?.recommended_resume_id || document.getElementById('resume-override-select').value;
+
+  setBtnLoading('download-btn', 'download-btn-text', true, 'Building...');
+
+  try {
+    const customFilename = document.getElementById('pdf-filename-input').value.trim();
+    const r = await fetch('generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        resume_id:       resumeId,
+        approved_edits:  approved,
+        bullet_count:    S.bullet_count,
+        deviation:       S.deviation,
+        line_fill_pct:   100,
+        custom_filename: customFilename || null,
+      }),
+    });
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); } catch { throw new Error(`Server error (${r.status}) — check Flask logs`); }
+    if (!r.ok) throw new Error(d.error || d.detail || `HTTP ${r.status}`);
+
+    // Trigger the download directly (route sends as attachment)
+    window.location.href = 'download/' + d.filename;
+
+    const confirm = document.getElementById('dl-confirm');
+    confirm.textContent = 'Saved as: ' + d.filename;
+    confirm.classList.remove('hidden');
+
+    // Reveal cover letter section (company + role pulled from JD when generated)
+    document.getElementById('cl-section').classList.remove('hidden');
+  } catch(e) {
+    showAlert(alertEl, e.message);
+  } finally {
+    setBtnLoading('download-btn', 'download-btn-text', false, 'Download PDF');
+  }
+}
+
+// ── Cover letter (Step 2) ──────────────────────────────────────────────────────────
+async function runCoverLetter() {
+  const jd      = document.getElementById('jd-input').value.trim();
+  const alertEl = document.getElementById('cl-alert');
+  alertEl.classList.add('hidden');
+
+  if (!jd) return showAlert(alertEl, 'Go back to Step 1 and paste a job description first.');
+
+  const resumeId = evalData?.recommended_resume_id
+                || document.getElementById('resume-override-select').value
+                || undefined;
+
+  setBtnLoading('cl-btn', 'cl-btn-text', true, 'Generating...');
+  document.getElementById('cl-output').classList.add('hidden');
+
+  try {
+    const d = await postCoverLetter(jd, resumeId);
+    document.getElementById('cl-text').value = d.cover_letter || '';
+    document.getElementById('cl-detected').textContent = clDetectedLabel(d);
+    document.getElementById('cl-output').classList.remove('hidden');
+    document.getElementById('cl-output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(e) {
+    showAlert(alertEl, e.message);
+  } finally {
+    setBtnLoading('cl-btn', 'cl-btn-text', false, 'Regenerate');
+  }
+}
+
+// Shared cover-letter request. Returns parsed JSON or throws.
+async function postCoverLetter(jd, resumeId) {
+  const r = await fetch('cover-letter', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      jd_text:   jd,
+      api_key:   S.api_key,
+      base_url:  S.base_url,
+      model:     modelFor('edit') || undefined,
+      resume_id: resumeId,
+    }),
+  });
+  const text = await r.text();
+  let d;
+  try { d = JSON.parse(text); } catch { throw new Error(`Server error (${r.status}) — check Flask logs`); }
+  if (!r.ok) throw new Error(d.error || d.detail || `HTTP ${r.status}`);
+  return d;
+}
+
+function clDetectedLabel(d) {
+  const bits = [];
+  if (d.firm) bits.push('Company: ' + d.firm);
+  if (d.role) bits.push('Role: ' + d.role);
+  return bits.join('  ·  ');
+}
+
+// ── Filename helpers ──────────────────────────────────────────────────────────────
+function prefillFilename(companyName) {
+  const input = document.getElementById('pdf-filename-input');
+  const hint  = document.getElementById('filename-hint');
+  const today = new Date().toISOString().slice(0, 10);
+  // Only pre-fill if user hasn't typed something themselves
+  if (!input.value.trim()) {
+    if (companyName) {
+      const slug = companyName.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+      input.value = `${slug}_${today}`;
+      hint.textContent = 'Pre-filled from JD. Leave blank to auto-name from your resume.';
+    } else {
+      hint.textContent = 'Company not detected — enter a name or leave blank for default.';
+    }
+  }
+}
+
+function onFilenameInput() {
+  const val  = document.getElementById('pdf-filename-input').value.trim();
+  const hint = document.getElementById('filename-hint');
+  hint.textContent = val ? `File will be saved as: ${val}.pdf` : 'Leave blank to use default format.';
+}
+
+// ── Cover letter from step 1 ─────────────────────────────────────────────────────
+function toggleClStep1() {
+  const sec = document.getElementById('cl-step1-section');
+  const wasHidden = sec.classList.contains('hidden');
+  sec.classList.toggle('hidden', !wasHidden);
+  // Collapse eval results when CL path is chosen
+  if (wasHidden) {
+    document.getElementById('eval-results').classList.add('hidden');
+    sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+async function runCoverLetterStep1() {
+  const jd      = document.getElementById('jd-input').value.trim();
+  const alertEl = document.getElementById('cl1-alert');
+  alertEl.classList.add('hidden');
+
+  if (!jd) return showAlert(alertEl, 'Paste a job description first.');
+
+  setBtnLoading('cl1-gen-btn', 'cl1-gen-btn-text', true, 'Generating...');
+  document.getElementById('cl1-output').classList.add('hidden');
+
+  try {
+    // No resume_id here — server triages across resumes (or uses the only one).
+    const d = await postCoverLetter(jd, undefined);
+    document.getElementById('cl1-text').value = d.cover_letter || '';
+    document.getElementById('cl1-detected').textContent = clDetectedLabel(d);
+    document.getElementById('cl1-output').classList.remove('hidden');
+    document.getElementById('cl1-output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(e) {
+    showAlert(alertEl, e.message);
+  } finally {
+    setBtnLoading('cl1-gen-btn', 'cl1-gen-btn-text', false, 'Regenerate');
+  }
+}
+
+function copyCoverLetterStep1() {
+  const text = document.getElementById('cl1-text').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('#cl1-output .btn-outline');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = orig, 1800);
+  });
+}
+
+function copyCoverLetter() {
+  const text = document.getElementById('cl-text').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('#cl-output .btn-outline');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = orig, 1800);
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────────
+function showAlert(el, msg) {
+  el.innerHTML = `<span class="alert-icon">!</span><span>${esc(msg)}</span>`;
+  el.classList.remove('hidden');
+}
+
+function setBtnLoading(btnId, textId, loading, label) {
+  const btn = document.getElementById(btnId);
+  if (loading) {
+    btn.disabled = true;
+    const isLight = btn.classList.contains('btn-outline');
+    btn.innerHTML = `<div class="spinner${isLight ? ' dark' : ''}"></div><span>${label}</span>`;
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = `<span id="${textId}">${label}</span>`;
+    if (btnId === 'eval-btn') updateEvalButtonState();
+  }
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+function fmtDate(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); }
+  catch(e) { return ''; }
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────────
+(async function init() {
+  await fetchModels();
+  loadSettings();
+  populateSettingsUI();
+  await refreshResumeList();
+  updateEvalButtonState();
+
+  // Auto-open settings on first visit if no credential is saved
+  if (!S.api_key && !S.base_url) {
+    openSettings();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "id": "5a3b1c2d",
+    "nickname": "Sample",
+    "description": "Example resume — replace with your own via the Settings panel",
+    "summary": "This is a fictional sample resume bundled so the app runs out of the box. It is not real. Upload your own .docx through Settings to create resumes tied to your API key, then delete this sample if you like.",
+    "uploaded_at": "2024-01-01T00:00:00+00:00",
+    "key_hash": null,
+    "public": true,
+    "digest": "Acme Analytics | Strategy Analyst | Jan 2023 – Present. Built market sizing models and competitive landscapes to guide product strategy. Ran customer discovery interviews and synthesized findings into roadmap recommendations.\n\nBrightPath Labs | Operations Associate | Jun 2021 – Dec 2022. Streamlined onboarding workflows and reduced manual processing time. Coordinated cross-functional launches across product, sales, and support."
+  },
+  "parsed": {
+    "version": null,
+    "candidate": {
+      "name": "JORDAN AVERY",
+      "contact_raw": "Anytown, USA | (000) 000-0000 | jordan.avery@example.com | LinkedIn",
+      "email": "jordan.avery@example.com",
+      "phone": "(000) 000-0000",
+      "location": "Anytown, USA",
+      "linkedin": "LinkedIn",
+      "linkedin_url": null
+    },
+    "education": [
+      {
+        "institution": "STATE UNIVERSITY, SCHOOL OF BUSINESS",
+        "date": "May 2021",
+        "lines": [
+          "Anytown, USA",
+          "Bachelor of Business Administration",
+          "Coursework: Strategy, Data Analytics, Finance"
+        ]
+      }
+    ],
+    "experience": [
+      {
+        "company": "Acme Analytics",
+        "title": "Strategy Analyst",
+        "location": "Anytown, USA",
+        "dates": "Jan 2023 – Present",
+        "bullets": [
+          "Built market sizing models and competitive landscapes that informed quarterly product strategy decisions for leadership.",
+          "Ran customer discovery interviews and synthesized findings into prioritized roadmap recommendations adopted by the product team.",
+          "Designed dashboards tracking adoption metrics, giving stakeholders a single source of truth for performance reviews."
+        ]
+      },
+      {
+        "company": "BrightPath Labs",
+        "title": "Operations Associate",
+        "location": "Anytown, USA",
+        "dates": "Jun 2021 – Dec 2022",
+        "bullets": [
+          "Streamlined onboarding workflows and reduced manual processing time across the operations team.",
+          "Coordinated cross-functional product launches spanning sales, support, and engineering.",
+          "Documented standard operating procedures that shortened new-hire ramp time."
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Strategy & Analysis",
+        "content": "Market Research, Competitive Benchmarking, Financial Modeling, Roadmapping, Stakeholder Engagement"
+      },
+      {
+        "category": "Tools",
+        "content": "Excel, SQL, Tableau, Python (pandas), Notion"
+      },
+      {
+        "category": "Languages",
+        "content": "English (Native)"
+      }
+    ],
+    "skills_section_title": "SKILLS"
+  }
+}

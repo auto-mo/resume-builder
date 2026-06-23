@@ -1,0 +1,16 @@
+# Example systemd unit for running the resume builder without Docker.
+# Copy to /etc/systemd/system/resume-builder.service and edit User/paths.
+[Unit]
+Description=Resume Builder Flask App
+After=network.target
+
+[Service]
+User=youruser
+WorkingDirectory=/home/youruser/resume-builder
+EnvironmentFile=/home/youruser/resume-builder/.env
+ExecStart=/usr/bin/python3 app.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

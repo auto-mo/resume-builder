@@ -1,0 +1,15 @@
+services:
+  resume-builder:
+    build: .
+    image: resume-builder
+    ports:
+      - "5001:5001"
+    # Optional: holds ANTHROPIC_API_KEY / OWNER_ACCESS_CODE for owner mode.
+    # Run `cp .env.example .env` first (it may stay blank for bring-your-own-key use).
+    env_file:
+      - .env
+    volumes:
+      # Persist uploaded resumes and generated PDFs across container restarts.
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+    restart: unless-stopped

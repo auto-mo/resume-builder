@@ -1,0 +1,35 @@
+# ─── Secrets ──────────────────────────────────────────────────────────────
+.env
+*.env
+!.env.example
+
+# ─── Personal data (owner-only, lives on Jarvis) ────────────────────────────
+data/resumes/*
+!data/resumes/.gitkeep
+!data/resumes/5a3b1c2d.json
+cover_letter_kb.yaml
+outputs/*
+!outputs/.gitkeep
+report.json
+
+# Source resume / KB documents (owner's real content)
+*.docx
+
+# ─── Local / host-specific ──────────────────────────────────────────────────
+CLAUDE.md
+.claude/
+# Build log carries server IP / username / deploy commands — keep it local.
+BUILD_LOG.md
+# Real deployment configs carry your server user/paths/domain — publish the
+# genericized copies under deploy/ instead.
+nginx-apps.conf
+resume-builder.service
+
+# ─── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ─── OS / editor ──────────────────────────────────────────────────────────────
+.DS_Store

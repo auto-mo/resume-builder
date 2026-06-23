@@ -1,0 +1,21 @@
+# Never bake secrets or personal data into the image — data/ is a runtime volume.
+.env
+*.env
+!.env.example
+data/resumes/*
+!data/resumes/.gitkeep
+!data/resumes/5a3b1c2d.json
+cover_letter_kb.yaml
+outputs/*
+*.docx
+report.json
+
+# Repo / local cruft
+.git
+.gitignore
+.claude/
+CLAUDE.md
+__pycache__/
+*.pyc
+.DS_Store
+BUILD_LOG.md
