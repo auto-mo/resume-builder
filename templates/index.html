@@ -574,7 +574,8 @@
         </div>
       </div>
 
-      <!-- Local LLM (optional) -->
+      <!-- Local LLM (optional; only when the operator sets ALLOW_CUSTOM_BASE_URL=1) -->
+      {% if allow_base_url %}
       <div class="field">
         <label class="field-label" for="base-url-input">Local model endpoint (optional)</label>
         <input type="text" id="base-url-input" placeholder="http://localhost:11434/v1" autocomplete="off"
@@ -587,6 +588,12 @@
           reliable results; small ones may need a retry.
         </div>
       </div>
+      {% else %}
+      <div class="field">
+        <div class="field-label">Local model endpoint</div>
+        <div class="field-hint">Local models work when you run Resume Builder yourself; see the GitHub README.</div>
+      </div>
+      {% endif %}
     </div>
 
     <!-- Models -->
@@ -999,12 +1006,14 @@ document.getElementById('settings-btn').addEventListener('click', () => {
   refreshResumeList();
 });
 
+const ALLOW_BASE_URL = {{ 'true' if allow_base_url else 'false' }};
+
 // ── Persist settings ──────────────────────────────────────────────────────────────
 function loadSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem('rb_settings') || '{}');
     S.api_key      = saved.api_key      || '';
-    S.base_url     = saved.base_url     || '';
+    S.base_url     = ALLOW_BASE_URL ? (saved.base_url || '') : '';
     S.local_model  = saved.local_model  || '';
     S.eval_model   = saved.eval_model   || '';
     S.edit_model   = saved.edit_model   || '';
@@ -1015,8 +1024,10 @@ function loadSettings() {
 
 function saveSettings() {
   S.api_key      = document.getElementById('api-key-input').value.trim();
-  S.base_url     = document.getElementById('base-url-input').value.trim();
-  S.local_model  = document.getElementById('local-model-input').value.trim();
+  if (ALLOW_BASE_URL) {
+    S.base_url     = document.getElementById('base-url-input').value.trim();
+    S.local_model  = document.getElementById('local-model-input').value.trim();
+  }
   S.bullet_count = parseInt(document.getElementById('settings-bullet-slider').value);
   S.deviation    = parseFloat(document.getElementById('settings-dev-slider').value);
   S.eval_model   = document.getElementById('eval-model-select').value;
@@ -1027,8 +1038,10 @@ function saveSettings() {
 
 function populateSettingsUI() {
   document.getElementById('api-key-input').value = S.api_key;
-  document.getElementById('base-url-input').value = S.base_url;
-  document.getElementById('local-model-input').value = S.local_model;
+  if (ALLOW_BASE_URL) {
+    document.getElementById('base-url-input').value = S.base_url;
+    document.getElementById('local-model-input').value = S.local_model;
+  }
   document.getElementById('settings-bullet-slider').value = S.bullet_count;
   document.getElementById('settings-bullet-val').textContent = S.bullet_count;
   document.getElementById('settings-dev-slider').value = S.deviation;

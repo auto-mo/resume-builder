@@ -156,6 +156,26 @@ def _owner_rate_ok() -> bool:
         return True
 
 
+# Custom / local-model endpoints are OFF by default. A client-supplied base_url makes
+# the server send requests wherever the client says (SSRF), which is only acceptable
+# when you run the app yourself. Self-hosters set ALLOW_CUSTOM_BASE_URL=1.
+BASE_URL_DISABLED_MSG = ("Local models work when you run Resume Builder yourself; "
+                         "see the GitHub README.")
+
+
+def custom_base_url_allowed() -> bool:
+    return os.environ.get("ALLOW_CUSTOM_BASE_URL", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+class BaseUrlNotAllowed(Exception):
+    pass
+
+
+@app.errorhandler(BaseUrlNotAllowed)
+def _base_url_not_allowed(_e):
+    return jsonify({"error": BASE_URL_DISABLED_MSG}), 400
+
+
 def resolve_credentials(submitted_key: str, base_url: str = "") -> dict | None:
     """Map a submitted key (+ optional local base URL) to effective credentials.
 
@@ -165,6 +185,10 @@ def resolve_credentials(submitted_key: str, base_url: str = "") -> dict | None:
     """
     submitted_key = (submitted_key or "").strip()
     base_url = (base_url or "").strip()
+
+    # 0. Custom endpoints are refused outright unless the operator opted in.
+    if base_url and not custom_base_url_allowed():
+        raise BaseUrlNotAllowed()
 
     # 1. Owner unlock — constant-time compare; requires a server-side real key.
     owner_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
@@ -420,7 +444,7 @@ Return ONLY valid JSON — no markdown, no explanation:
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", allow_base_url=custom_base_url_allowed())
 
 
 @app.route("/privacy")

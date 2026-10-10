@@ -58,13 +58,23 @@ Open **Settings** (gear icon) and choose one:
 
 - **Anthropic / OpenAI** — paste your key (`sk-ant-...` or `sk-...`). It is sent
   with each request from your browser and never stored on the server.
-- **Local model** — leave the key blank and enter an OpenAI-compatible endpoint,
+- **Local model** — requires `ALLOW_CUSTOM_BASE_URL=1` (see below). Leave the key blank and enter an OpenAI-compatible endpoint,
   e.g. `http://localhost:11434/v1` for Ollama, plus a model name like
   `llama3.1`. Runs fully offline. Larger models give more reliable structured
   output; small ones may occasionally need a retry.
 
 Get a key: [Anthropic Console](https://console.anthropic.com/settings/keys) ·
 [OpenAI Platform](https://platform.openai.com/api-keys).
+
+### Self-hosting a local model
+
+Custom endpoints are **off by default**: the server refuses any request that
+carries a `base_url` (HTTP 400) and the Settings panel hides the field. A
+client-chosen URL would let any visitor make the server call addresses on its
+own network, so this is only safe when you are the only user. If you run Resume
+Builder on your own machine and want a local model, set `ALLOW_CUSTOM_BASE_URL=1`
+in `.env` (or in the environment) and restart. Do not set it on an instance that
+other people can reach.
 
 ## Your resume data
 
