@@ -50,7 +50,7 @@ PROVIDER_MODELS = {
     "anthropic": [
         {"id": "claude-opus-4-8",           "label": "Claude Opus 4.8 (most capable)"},
         {"id": "claude-sonnet-4-6",         "label": "Claude Sonnet 4.6 (recommended)"},
-        {"id": "claude-haiku-4-5-20251001", "label": "Claude Haiku 4.5 (fastest)"},
+        {"id": "claude-haiku-5-5",         "label": "Claude Haiku 5.5 (fastest)"},
     ],
     "openai": [
         {"id": "gpt-4o",       "label": "GPT-4o (recommended)"},
@@ -83,9 +83,13 @@ def ai_call(provider: str, model: str, system: str, user: str, api_key: str,
     """
     if provider == "anthropic":
         client = anthropic.Anthropic(api_key=api_key)
+        # Haiku 5.5 thinks by default and its reply can open with a thinking
+        # block; with thinking off it answers directly, as Haiku 4.5 did (2026-10-09).
+        extra = {"thinking": {"type": "disabled"}} if model.startswith("claude-haiku-5") else None
         response = client.messages.create(
             model=model,
             max_tokens=2048,
+            extra_body=extra,
             messages=[{
                 "role": "user",
                 "content": [
@@ -94,7 +98,7 @@ def ai_call(provider: str, model: str, system: str, user: str, api_key: str,
                 ],
             }],
         )
-        return response.content[0].text
+        return "".join(b.text for b in response.content if b.type == "text")
     else:
         # openai and local both speak the OpenAI Chat Completions API.
         client = openai.OpenAI(api_key=api_key or "not-needed", base_url=base_url or None)
@@ -419,11 +423,28 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/privacy")
+def privacy():
+    return render_template("privacy.html")
+
+
+# Generated PDFs carry an unguessable "__<16 hex>" token before .pdf (see
+# resume_maker.build_pdf). Stripping it restores the clean name the user saves as.
+_TOKEN_RE = re.compile(r'__[0-9a-f]{16}(?=\.pdf$)')
+
+
+def _clean_download_name(filename: str) -> str:
+    return _TOKEN_RE.sub('', filename)
+
+
 @app.route("/download/<filename>")
 def download(filename):
-    if not re.match(r'^[\w][\w_-]{0,80}\.pdf$', filename):
+    if not re.match(r'^[\w][\w_-]{0,96}\.pdf$', filename):
         return jsonify({"error": "invalid filename"}), 400
-    return send_from_directory(app.config["OUTPUT_DIR"], filename, as_attachment=True)
+    return send_from_directory(
+        app.config["OUTPUT_DIR"], filename,
+        as_attachment=True, download_name=_clean_download_name(filename),
+    )
 
 
 @app.route("/api/key-status")
@@ -555,7 +576,7 @@ def upload_resume():
     nickname = request.form.get("nickname", "").strip()
     description = request.form.get("description", "").strip()
     creds = resolve_credentials(request.form.get("api_key", ""), request.form.get("base_url", ""))
-    summary_model = request.form.get("summary_model", "claude-haiku-4-5-20251001").strip()
+    summary_model = request.form.get("summary_model", "claude-haiku-5-5").strip()
 
     if not nickname:
         return jsonify({"error": "nickname is required"}), 400
@@ -672,7 +693,7 @@ def evaluate():
     jd_text = body.get("jd_text", "").strip()
     creds = resolve_credentials(get_api_key(body), body.get("base_url", ""))
     eval_model  = body.get("eval_model",  "claude-sonnet-4-6").strip()
-    edit_model  = body.get("edit_model",  "claude-haiku-4-5-20251001").strip()
+    edit_model  = body.get("edit_model",  "claude-haiku-5-5").strip()
     deviation   = float(body.get("deviation", 0.3))
     resume_id   = body.get("resume_id", "").strip() or None  # explicit override
 
@@ -828,6 +849,7 @@ def generate():
 
         return jsonify({
             "filename": filename,
+            "download_name": _clean_download_name(filename),
             "resume_id": resume_id,
             "nickname": record["meta"]["nickname"],
             "edits_applied": len(approved_edits),
@@ -874,7 +896,7 @@ def cover_letter():
     body = request.get_json(force=True)
     jd_text   = body.get("jd_text", "").strip()
     creds     = resolve_credentials(get_api_key(body), body.get("base_url", ""))
-    model     = body.get("model", "claude-haiku-4-5-20251001").strip()
+    model     = body.get("model", "claude-haiku-5-5").strip()
     resume_id = body.get("resume_id", "").strip() or None
 
     if not jd_text:

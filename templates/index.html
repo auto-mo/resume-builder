@@ -116,6 +116,20 @@
     .theme-pill-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; color: var(--text-2); }
     .theme-pill-label { font-size: 12px; font-weight: 500; color: var(--text-2); }
 
+    /* ── Footer ──────────────────────────────────────────────────────────────── */
+    .site-footer {
+      max-width: 760px;
+      margin: 32px auto 24px;
+      padding: 16px 20px 0;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 8px;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .site-footer a { color: var(--text-2); }
+    .site-footer a:hover { color: var(--accent); }
+    .site-footer .footer-built { margin-left: auto; }
+
     /* ── Settings overlay + panel ────────────────────────────────────────────── */
     .settings-overlay {
       position: fixed; inset: 0; z-index: 300;
@@ -513,6 +527,11 @@
 <header class="header">
   <div class="header-logo">Resume<span>Builder</span></div>
 
+  <a class="icon-btn" href="https://github.com/auto-mo/resume-builder" target="_blank"
+     rel="noopener" aria-label="View source on GitHub" title="View source on GitHub">
+    <svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.04-.02-2.05-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.81 1.1.81 2.22 0 1.6-.01 2.89-.01 3.29 0 .32.21.7.82.58A12 12 0 0 0 24 12.5C24 5.87 18.63.5 12 .5Z"/></svg>
+  </a>
+
   <button class="theme-pill" id="theme-toggle" aria-label="Toggle theme">
     <div class="theme-pill-icon" id="theme-icon">
       <!-- filled by JS -->
@@ -895,6 +914,12 @@
 
 </main>
 
+<!-- ── Footer ──────────────────────────────────────────────────────────────────── -->
+<footer class="site-footer">
+  <a href="privacy">Privacy policy</a>
+  <span class="footer-built">Built by <a href="https://mohithgujjula.com" target="_blank" rel="noopener">Mohith Gujjula</a></span>
+</footer>
+
 <footer style="text-align:center;padding:24px 0 16px;font-size:11px;color:var(--text-muted);">
   Resume Builder
 </footer>
@@ -1190,7 +1215,7 @@ async function uploadResume() {
   if (key)        fd.append('api_key', key);
   if (S.base_url) fd.append('base_url', S.base_url);
   if (key || S.base_url) {
-    fd.append('summary_model', modelFor('edit') || 'claude-haiku-4-5-20251001');
+    fd.append('summary_model', modelFor('edit') || 'claude-haiku-5-5');
   }
 
   try {
@@ -1437,11 +1462,12 @@ async function downloadPdf() {
     try { d = JSON.parse(text); } catch { throw new Error(`Server error (${r.status}) — check Flask logs`); }
     if (!r.ok) throw new Error(d.error || d.detail || `HTTP ${r.status}`);
 
-    // Trigger the download directly (route sends as attachment)
+    // Trigger the download directly (route sends as attachment).
+    // d.filename carries an unguessable token; the file saves under d.download_name.
     window.location.href = 'download/' + d.filename;
 
     const confirm = document.getElementById('dl-confirm');
-    confirm.textContent = 'Saved as: ' + d.filename;
+    confirm.textContent = 'Saved as: ' + (d.download_name || d.filename);
     confirm.classList.remove('hidden');
 
     // Reveal cover letter section (company + role pulled from JD when generated)

@@ -19,6 +19,7 @@ Standalone test:
 import os
 import re
 import json
+import secrets
 import asyncio
 import argparse
 import datetime
@@ -396,7 +397,12 @@ def build_pdf(parsed: dict, roles_override: list = None, settings: dict = None,
     """
     Build PDF from parsed resume data.
     Returns (filename, error, warnings).
-    Filename: CandidateName_TargetCompany_YYYY-MM-DD.pdf (or nickname if no company).
+
+    The on-disk filename is CandidateName_TargetCompany_YYYY-MM-DD__<token>.pdf,
+    where <token> is an unguessable random suffix. This is a security boundary:
+    the /download route is unauthenticated, so a deterministic filename would let
+    anyone enumerate and download other users' resumes by guessing name+company+date.
+    The download route strips the token to restore the clean saved filename.
     Pass custom_filename (without .pdf) to override the generated stem.
     """
     import datetime
@@ -410,7 +416,9 @@ def build_pdf(parsed: dict, roles_override: list = None, settings: dict = None,
     else:
         company_slug = _safe_slug(target_company or nickname or parsed.get("version", ""))
         stem = f"{name_slug}_{company_slug}_{date_str}" if company_slug else f"{name_slug}_{date_str}"
-    filename = f"{stem}.pdf"
+    # 16 hex chars (64 bits) of entropy makes the download URL unguessable.
+    token = secrets.token_hex(8)
+    filename = f"{stem}__{token}.pdf"
     output_path = os.path.join(OUTPUT_DIR, filename)
 
     html = render_html(parsed, roles_override, settings)

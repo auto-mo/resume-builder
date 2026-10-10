@@ -1,0 +1,6 @@
+# Resume Builder: retention sweep for generated PDFs.
+# Add this line to the crontab of the user that runs the app (crontab -e),
+# and change /path/to/resume-builder to where you installed it.
+#
+# Runs daily at 03:15. Override the window with OUTPUT_RETENTION_DAYS in the env.
+15 3 * * * cd /path/to/resume-builder && /usr/bin/python3 cleanup.py >> /path/to/resume-builder/cleanup.log 2>&1
