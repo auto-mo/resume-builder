@@ -12,6 +12,14 @@ Nothing is sent anywhere except the provider you choose.
 > resume isolation is keyed off your API key as a convenience, not a hard
 > security boundary. Run it for yourself, on your machine or your own server.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/evaluate-dark.png">
+  <img src="docs/screenshots/evaluate-light.png" alt="Resume Builder after a job description is pasted: a fit score of 78, target keywords found in the resume, keywords missing from it, and the recommended resume">
+</picture>
+
+Paste a job description and it scores the fit, lists the keywords you match and the ones you lack, and recommends
+which resume in your library to start from. The example uses invented content.
+
 ## Features
 
 - **JD evaluation** — fit assessment, role match, and keyword gaps.
